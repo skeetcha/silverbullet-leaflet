@@ -46,6 +46,10 @@ export async function widget(bodyText: string): Promise<WidgetContent> {
                 return (zeros + str).slice(-len);
             }
 
+            function alertWindow(msg) {
+                syscall('editor.flashNotification', msg, 'info');
+            }
+
             loadJsByUrl('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js').then(() => {
                 var script = document.querySelector('[src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"]');
                 var head = script.parentElement;
@@ -171,6 +175,10 @@ export async function widget(bodyText: string): Promise<WidgetContent> {
                     var tiles = L.imageOverlay(data.image, bounds).addTo(map);
                     map.fitBounds(bounds);
                 }
+
+                map.on('contextmenu', (e) => {
+                    alertWindow(e.latlng.toString());
+                });
             });`
     });
 }
