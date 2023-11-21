@@ -78,9 +78,12 @@ export async function widget(bodyText: string): Promise<WidgetContent> {
                 }
                 
                 if (data.image === undefined) {
-                    var lat = 39.983334;
-                    var long = -82.983330;
-                    var zoomLevel = 5;
+                    var lat = 39.983334,
+                        long = -82.983330,
+                        zoomLevel = 5,
+                        maxZoom = 10,
+                        minZoom = 1,
+                        zoomDelta = 1;
 
                     if (data.lat !== undefined) {
                         lat = data.lat;
@@ -95,23 +98,16 @@ export async function widget(bodyText: string): Promise<WidgetContent> {
                     }
 
                     map = L.map(data.id).setView([lat, long], zoomLevel);
-                    var maxZoom, minZoom, zoomDelta;
 
-                    if (data.maxZoom === undefined) {
-                        maxZoom = 10;
-                    } else {
+                    if (data.maxZoom !== undefined) {
                         maxZoom = data.maxZoom;
                     }
 
-                    if (data.minZoom === undefined) {
-                        minZoom = 1;
-                    } else {
+                    if (data.minZoom !== undefined) {
                         minZoom = data.minZoom;
                     }
 
-                    if (data.zoomDelta === undefined) {
-                        zoomDelta = 1;
-                    } else {
+                    if (data.zoomDelta !== undefined) {
                         zoomDelta = data.zoomDelta;
                     }
                     
@@ -125,6 +121,55 @@ export async function widget(bodyText: string): Promise<WidgetContent> {
                     if (data.darkMode === true) {
                         document.getElementById(data.id).classList.add('darkMode');
                     }
+                } else {
+                    var zoomLevel = -5,
+                        maxZoom = 1,
+                        minZoom = -10,
+                        zoomDelta = 1,
+                        lat, long;
+                    
+                    if (data.defaultZoom !== undefined) {
+                        zoomLevel = data.defaultZoom - 10;
+                    }
+
+                    if (data.zoomDelta !== undefined) {
+                        zoomDelta = data.zoomDelta;
+                    }
+
+                    if (data.maxZoom !== undefined) {
+                        maxZoom = data.maxZoom - 10;
+                    }
+
+                    if (data.minZoom !== undefined) {
+                        minZoom = data.minZoom - 10;
+                    }
+
+                    var img = document.createElement('img');
+                    img.id = 'mapImage';
+                    img.src = data.image;
+
+                    if (data.lat === undefined) {
+                        lat = img.naturalHeight / 2;
+                    } else {
+                        lat = data.lat;
+                    }
+
+                    if (data.long === undefined) {
+                        long = img.naturalWidth / 2;
+                    } else {
+                        long = data.long;
+                    }
+                    
+                    map = L.map(data.id, {
+                        crs: L.CRS.Simple,
+                        zoomDelta: zoomDelta,
+                        maxZoom: maxZoom,
+                        minZoom: minZoom
+                    }).setView([lat, long], zoomLevel);
+
+                    var bounds = [[0,0], [img.naturalHeight,img.naturalWidth]];
+                    var tiles = L.imageOverlay(data.image, bounds).addTo(map);
+                    map.fitBounds(bounds);
                 }
             });`
     });
