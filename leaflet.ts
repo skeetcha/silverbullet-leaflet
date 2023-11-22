@@ -20,32 +20,6 @@ export async function widget(bodyText: string): Promise<WidgetContent> {
     return Promise.resolve({
         html: `<div id="${data.id}"></div>`,
         script: `
-            function invertColor(hex) {
-                if (hex.indexOf('#') === 0) {
-                    hex = hex.slice(1);
-                }
-                
-                if (hex.length === 3) {
-                    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-                }
-
-                if (hex.length !== 6) {
-                    throw new Error('Invalid HEX color.');
-                }
-
-                var r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
-                    g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16),
-                    b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
-                
-                return '#' + padZero(r) + padZero(g) + padZero(b);
-            }
-
-            function padZero(str, len) {
-                len = len || 2;
-                var zeros = new Array(len).join('0');
-                return (zeros + str).slice(-len);
-            }
-
             function alertWindow(msg) {
                 syscall('editor.flashNotification', msg, 'info');
             }
@@ -174,6 +148,30 @@ export async function widget(bodyText: string): Promise<WidgetContent> {
                     var bounds = [[0,0], [img.naturalHeight,img.naturalWidth]];
                     var tiles = L.imageOverlay(data.image, bounds).addTo(map);
                     map.fitBounds(bounds);
+
+                    if (data.markers !== undefined) {
+                        if (data.markers.length !== 0) {
+                            data.markers.forEach((markerInfo) => {
+                                var marker = L.marker([markerInfo.loc[0], markerInfo.loc[1]]).addTo(map);
+
+                                if (markerInfo.name === undefined) {
+                                    marker.bindPopup('[' + markerInfo.loc[0].toString() + ', ' + markerInfo.loc[1].toString() + ']');
+                                } else {
+                                    if (markerInfo.isPageLink === true) {
+                                        var displayName = markerInfo.name;
+
+                                        if (markerInfo.displayName !== undefined) {
+                                            displayName = markerInfo.displayName;
+                                        }
+
+                                        marker.bindPopup('<a href="/' + markerInfo.name + '">' + displayName + '</a>');
+                                    } else {
+                                        marker.bindPopup(markerInfo.name);
+                                    }
+                                }
+                            });
+                        }
+                    }
                 }
 
                 map.on('contextmenu', (e) => {
